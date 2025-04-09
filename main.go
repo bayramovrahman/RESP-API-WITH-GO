@@ -2,11 +2,13 @@ package main
 
 import (
 	"net/http"
+	"example.com/rest-api/database"
 	"example.com/rest-api/models"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	db.InitDB()
 	server := gin.Default()
 
 	// Basit bir GET endpoint'i oluştur
