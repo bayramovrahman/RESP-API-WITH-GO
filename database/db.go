@@ -9,16 +9,16 @@ var DB *sql.DB
 
 func InitDB() {
 	var err error
-	DB, err = sql.Open("sqlite3", "api.db")
+	DB, err = sql.Open("sqlite3", "api.db") // "api.db" adlı SQLite veritabanını açıyoruz
 
 	if err != nil {
-		panic("Couldn't connect to database")
+		panic("Couldn't connect to database") // Bağlantı başarısızsa program durduruluyor
 	}
 
-	DB.SetMaxOpenConns(10)
-	DB.SetMaxIdleConns(5)
+	DB.SetMaxOpenConns(10)    // Aynı anda açılabilecek maksimum bağlantı sayısı 10
+	DB.SetMaxIdleConns(5)     // Boşta bekleyen maksimum bağlantı sayısı 5
 
-	createTables()
+	createTables()            // Gerekli tablolar oluşturuluyor
 }
 
 func createTables() {
@@ -33,9 +33,9 @@ func createTables() {
 		)
 	`
 
-	_, err := DB.Exec(createEventsTable)
+	_, err := DB.Exec(createEventsTable) // SQL sorgusu çalıştırılıyor
 
 	if err != nil {
-		panic("Could not create events table: " + err.Error())
+		panic("Could not create events table: " + err.Error()) // Tablo oluşturulamazsa hata fırlat
 	}
 }

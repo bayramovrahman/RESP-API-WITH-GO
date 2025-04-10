@@ -1,9 +1,12 @@
 package models
 
-import "time"
+import (
+	"time"
+	"example.com/rest-api/database"
+)
 
 type Event struct {
-	ID          int
+	ID          int64
 	Name        string    `binding:"required"`
 	Description string    `binding:"required"`
 	Location    string    `binding:"required"`
@@ -11,13 +14,59 @@ type Event struct {
 	UserID      int
 }
 
-var events = []Event{}
+func (e Event) Save() error {
+	query := `
+		INSERT INTO events(name, description, location, dateTime, user_id)
+		VALUES (?, ?, ?, ?, ?)
+	`
 
-func (e Event) Save() {
-	// later: add it to a database
-	events = append(events, e)
+	stmt, err := db.DB.Prepare(query) // SQL sorgusu çalıştırılmadan önce hazırlanıyor
+
+	if err != nil {
+		return err 
+	}
+	defer stmt.Close() // Fonksiyon bitiminde statement kapatılıyor
+
+	result, err := stmt.Exec(e.Name, e.Description, e.Location, e.DateTime, e.UserID)
+	// Hazırlanan sorgu çalıştırılıyor ve ilgili alanlara Event nesnesindeki veriler yerleştiriliyor
+
+	if err != nil {
+		return err
+	}
+
+	id, err := result.LastInsertId() // Eklenen verinin otomatik oluşturulan ID’si alınıyor
+
+	e.ID = id // Bu ID, Event nesnesine atanıyor (yalnız burada değer kopyalanmış, dışarı yansımaz)
+
+	return err
+
+	// events = append(events, e)
 }
 
-func GetAllEvents() []Event {
-	return events
+
+func GetAllEvents() ([]Event, error) {
+	query := "SELECT * FROM events"
+
+	rows, err := db.DB.Query(query) // Sorgu çalıştırılıyor ve sonuçlar alınmaya başlanıyor
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close() // rows işlemi bittiğinde kapatılıyor
+
+	var events []Event // Event tipinde slice tanımlanıyor
+
+	for rows.Next() { // Her satır için dön
+		var event Event // Yeni bir Event nesnesi oluşturuluyor
+
+		err := rows.Scan(&event.ID, &event.Name, &event.Description, &event.Location, &event.DateTime, &event.UserID) // Satırdaki veriler Event nesnesine aktarılıyor
+
+		if err != nil {
+			return nil, err // Eğer hata varsa işlemi sonlandır ve hatayı döndür
+		}
+
+		events = append(events, event) // Event nesnesi listeye ekleniyor
+	}
+
+	return events, nil // Event listesi ve hata bilgisi döndürülüyor (hata yoksa nil olur)
 }
