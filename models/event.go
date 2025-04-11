@@ -73,14 +73,34 @@ func GetAllEvents() ([]Event, error) {
 
 func GetEventById(id int64) (*Event, error) {
 	query := "SELECT * FROM events WHERE id = ?"
-	row := db.DB.QueryRow(query, id)
+	row := db.DB.QueryRow(query, id) // Veritabanında tek bir satır döndüren sorguyu çalıştırır.
 
 	var event Event
 
-	err := row.Scan(&event.ID, &event.Name, &event.Description, &event.Location, &event.DateTime, &event.UserID)
+	err := row.Scan(&event.ID, &event.Name, &event.Description, &event.Location, &event.DateTime, &event.UserID) // Satırdaki veriler Event nesnesine aktarılıyor
 	if err!= nil {
-		return nil, err
+		return nil, err // Eğer hata varsa işlemi sonlandır ve hatayı döndür
 	}
 
 	return &event, nil
+}
+
+func (event Event) Update() error {
+	query := `
+		UPDATE events SET name = ?, description = ?, location = ?, dateTime = ?
+		WHERE id = ?
+	`
+	stmt, err := db.DB.Prepare(query) // SQL sorgusu çalıştırılmadan önce hazırlanıyor
+
+	if err != nil {
+		return err 
+	}
+	defer stmt.Close() // Fonksiyon bitiminde statement kapatılıyor
+
+	// Hazırlanan sorguyu çalıştır ve parametreleri ver
+	// event struct'ındaki alanları sorguya parametre olarak geçiyoruz
+	_, err = stmt.Exec(event.Name, event.Description, event.Location, event.DateTime, event.ID)
+
+	// Hata oluştuysa hatayı döndür, yoksa nil dönecek (başarılı)
+	return err
 }
