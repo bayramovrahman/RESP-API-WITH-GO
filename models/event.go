@@ -104,3 +104,18 @@ func (event Event) Update() error {
 	// Hata oluştuysa hatayı döndür, yoksa nil dönecek (başarılı)
 	return err
 }
+
+func (event Event) Delete() error {
+	query := "DELETE FROM events WHERE id = ?"
+
+	stmt, err := db.DB.Prepare(query) // SQL sorgusu çalıştırılmadan önce hazırlanıyor
+
+	if err != nil {
+		return err 
+	}
+	defer stmt.Close() // Fonksiyon bitiminde statement kapatılıyor
+
+	_, err = stmt.Exec(event.ID)
+
+	return err
+}
