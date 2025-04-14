@@ -3,7 +3,9 @@ package routes
 import (
 	"net/http"
 	"strconv"
+
 	"example.com/rest-api/models"
+	"example.com/rest-api/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,8 +13,7 @@ func getEvents(context *gin.Context) {
 	events, err := models.GetAllEvents()
 
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		// context.JSON(http.StatusBadRequest, gin.H{"message": "Could not fetch events. Please try again"})
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch events: " + err.Error()})
 		return
 	}
 
@@ -24,15 +25,13 @@ func getEvent(context *gin.Context) {
 	eventId, err := strconv.ParseInt(context.Param("id"), 10, 64)
 
 	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		// context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse event id"})
+		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse event id: " + err.Error()})
 		return
 	}
 
 	event, err := models.GetEventById(eventId)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		// context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch event"})
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch event: " + err.Error()})
 		return
 	}
 
@@ -40,23 +39,32 @@ func getEvent(context *gin.Context) {
 }
 
 func createEvent(context *gin.Context) {
-	var event models.Event
-	err := context.ShouldBindJSON(&event)
+	token := context.Request.Header.Get("Authorization")
 
-	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		// context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse request data."})
+	if token == "" {
+		context.JSON(http.StatusUnauthorized, gin.H{"message": "Not authorized"})
 		return
 	}
 
-	event.ID = 1
+	err := utils.VerifyToken(token)
+	if err != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{"message": "Not authorized"})
+		return
+	}
+
+	var event models.Event
+	err = context.ShouldBindJSON(&event)
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse request data: " + err.Error()})
+		return
+	}
+
 	event.UserID = 1
 
 	err = event.Save()
 
 	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		// context.JSON(http.StatusBadRequest, gin.H{"message": "Could not create event. Please try again"})
+		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not create event: " + err.Error()})
 		return
 	}
 
@@ -69,8 +77,7 @@ func updateEvent(context *gin.Context) {
 
 	if err != nil {
 		// Eğer dönüşümde hata oluşursa (geçersiz id formatı gibi), 400 Bad Request hatası döner
-		context.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		// context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse event id"})
+		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse event id: " + err.Error()})
 		return
 	}
 
@@ -79,8 +86,7 @@ func updateEvent(context *gin.Context) {
 
 	if err != nil {
 		// Eğer veri çekilirken hata olursa (örneğin: event yoksa), 500 Internal Server Error döner
-		context.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		// context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch event"})
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch event: " + err.Error()})
 		return
 	}
 
@@ -90,8 +96,7 @@ func updateEvent(context *gin.Context) {
 
 	if err != nil {
 		// Eğer JSON verisi beklenen formatta değilse, 400 Bad Request hatası döner
-		context.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		// context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse request data."})
+		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse request data: " + err.Error()})
 		return
 	}
 
@@ -103,8 +108,7 @@ func updateEvent(context *gin.Context) {
 
 	if err != nil {
 		// Güncelleme sırasında hata olursa, 500 Internal Server Error döner
-		context.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		// context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not update event"})
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not update event: " + err.Error()})
 		return
 	}
 
@@ -119,8 +123,7 @@ func deleteEvent(context *gin.Context) {
 
 	if err != nil {
 		// Eğer dönüşümde hata oluşursa (geçersiz id formatı gibi), 400 Bad Request hatası döner
-		context.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		// context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse event id"})
+		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse event id: " + err.Error()})
 		return
 	}
 
@@ -129,16 +132,14 @@ func deleteEvent(context *gin.Context) {
 
 	if err != nil {
 		// Eğer veri çekilirken hata olursa (örneğin: event yoksa), 500 Internal Server Error döner
-		context.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		// context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch event"})
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch event: " + err.Error()})
 		return
 	}
 
 	err = event.Delete()
 	if err != nil {
 		// Eğer veri çekilirken hata olursa (örneğin: event yoksa), 500 Internal Server Error döner
-		context.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		// context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not delete the event!"})
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not delete the event: " + err.Error()})
 		return
 	}
 
