@@ -8,11 +8,11 @@ func HashPassword(password string) (string, error) {
 }
 
 func CheckPasswordHash(password, hashedPassword string) bool {
-	err :=  bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 
 	/*
-		Hata umurumda değil, bunun yerine bu işlemi burada döndürerek, 
-		şifre geçersizse false döndürüyorum çünkü şifre geçerliyse 
+		Hata umurumda değil, bunun yerine bu işlemi burada döndürerek,
+		şifre geçersizse false döndürüyorum çünkü şifre geçerliyse
 		hata nil olacak ve şifre geçersizse nil olmayacak.
 	*/
 
