@@ -22,7 +22,6 @@ func InitDB() {
 }
 
 func createTables() {
-	
 	createUserTable := `
 		CREATE TABLE IF NOT EXISTS users (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,7 +31,6 @@ func createTables() {
 	`
 
 	_, err := DB.Exec(createUserTable)
-
 	if err != nil {
 		panic("Could not create users table: " + err.Error()) // Tablo oluşturulamazsa hata fırlat
 	}
@@ -49,11 +47,23 @@ func createTables() {
 		)
 	`
 
-	// FOREIGN KEY(user_id) REFERENCES users(id) => user_id, users tablosundaki id’ye referans verir (ilişkili tablo)
-
 	_, err = DB.Exec(createEventsTable) // SQL sorgusu çalıştırılıyor
-
 	if err != nil {
 		panic("Could not create events table: " + err.Error()) // Tablo oluşturulamazsa hata fırlat
+	}
+
+	createRegistrationsTable := `
+		CREATE TABLE IF NOT EXISTS registrations (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			event_id INTEGER,
+			user_id INTEGER,
+			FOREIGN KEY(event_id) REFERENCES events(id),
+			FOREIGN KEY(user_id) REFERENCES users(id)
+		)
+	`
+
+	_, err = DB.Exec(createRegistrationsTable) // SQL sorgusu çalıştırılıyor
+	if err != nil {
+		panic("Could not create registrations table: " + err.Error()) // Tablo oluşturulamazsa hata fırlat
 	}
 }
