@@ -3,9 +3,7 @@ package routes
 import (
 	"net/http"
 	"strconv"
-
 	"example.com/rest-api/models"
-	"example.com/rest-api/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,7 +21,6 @@ func getEvents(context *gin.Context) {
 func getEvent(context *gin.Context) {
 	// URL'den gelen "id" parametresini alır ve int64 türüne çevirir (örneğin: /events/5 → id = 5)
 	eventId, err := strconv.ParseInt(context.Param("id"), 10, 64)
-
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse event id: " + err.Error()})
 		return
@@ -39,30 +36,18 @@ func getEvent(context *gin.Context) {
 }
 
 func createEvent(context *gin.Context) {
-	token := context.Request.Header.Get("Authorization")
-
-	if token == "" {
-		context.JSON(http.StatusUnauthorized, gin.H{"message": "Not authorized"})
-		return
-	}
-
-	userId, err := utils.VerifyToken(token)
-	if err != nil {
-		context.JSON(http.StatusUnauthorized, gin.H{"message": "Not authorized"})
-		return
-	}
-
 	var event models.Event
-	err = context.ShouldBindJSON(&event)
+	
+	err := context.ShouldBindJSON(&event)
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse request data: " + err.Error()})
 		return
 	}
 
+	userId := context.GetInt64("userId")
 	event.UserID = userId
 
 	err = event.Save()
-
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not create event: " + err.Error()})
 		return

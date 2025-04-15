@@ -2,7 +2,6 @@ package routes
 
 import (
 	"net/http"
-
 	"example.com/rest-api/models"
 	"example.com/rest-api/utils"
 	"github.com/gin-gonic/gin"
