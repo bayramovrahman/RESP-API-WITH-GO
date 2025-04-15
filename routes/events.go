@@ -66,12 +66,17 @@ func updateEvent(context *gin.Context) {
 		return
 	}
 
-	// Belirtilen ID'ye sahip etkinliğin veritabanında olup olmadığını kontrol eder
-	_, err = models.GetEventById(eventId)
+	userId := context.GetInt64("userId")
+	event, err := models.GetEventById(eventId) // Belirtilen ID'ye sahip etkinliğin veritabanında olup olmadığını kontrol eder
 
 	if err != nil {
 		// Eğer veri çekilirken hata olursa (örneğin: event yoksa), 500 Internal Server Error döner
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch event: " + err.Error()})
+		return
+	}
+
+	if event.UserID != userId {
+		context.JSON(http.StatusUnauthorized, gin.H{"message": "Not authorized to update event!"})
 		return
 	}
 
@@ -112,12 +117,17 @@ func deleteEvent(context *gin.Context) {
 		return
 	}
 
-	// Belirtilen ID'ye sahip etkinliğin veritabanında olup olmadığını kontrol eder
-	event, err := models.GetEventById(eventId)
+	userId := context.GetInt64("userId")
+	event, err := models.GetEventById(eventId) // Belirtilen ID'ye sahip etkinliğin veritabanında olup olmadığını kontrol eder
 
 	if err != nil {
 		// Eğer veri çekilirken hata olursa (örneğin: event yoksa), 500 Internal Server Error döner
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch event: " + err.Error()})
+		return
+	}
+
+	if event.UserID != userId {
+		context.JSON(http.StatusUnauthorized, gin.H{"message": "Not authorized to delete event!"})
 		return
 	}
 
