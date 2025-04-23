@@ -1,4 +1,4 @@
-# RESP-API-WITH-GO
+# RESTful API WITH GO
 
 This project is a **RESTful API** developed using **Go (Golang)**. The goal of the project is to create fast, scalable, and secure APIs by leveraging the power of Go. The API is built using the **Gin framework**, which makes the development process more efficient.
 
